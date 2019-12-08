@@ -1,5 +1,5 @@
 # MMM-PoemOfTheDay
-Magic Mirror Module for displaying a poem of the day using poemist API. Optionally utilize [detect language api](https://detectlanguage.com/) to filter poems by language
+Magic Mirror Module for displaying a poem of the day using [poemist API](https://www.poemist.com/). Optionally utilize [detect language API](https://detectlanguage.com/) to filter poems by language
 
 # Screenshot
 ![MMM-PoemOfTheDay screenshot](./docs/images/MMM-screenshot.png)
