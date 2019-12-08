@@ -8,7 +8,7 @@ Module.register("MMM-PoemOfTheDay",{
 		lineLimit: 10,
 		detectLanguageApiKey: undefined,
 		// for a full list of supported languages see https://ws.detectlanguage.com/0.2/languages
-		languageSet: ["en"]
+		languageSet: ["en", "es"]
 	},
 
 	socketNotificationReceived: function(noti, payload) {
