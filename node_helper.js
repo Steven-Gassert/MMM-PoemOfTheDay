@@ -1,22 +1,17 @@
 const NodeHelper = require("node_helper");
 const axios = require("axios");
-const config = require("./config");
 var DetectLanguage = require("detectlanguage");
-var detectLanguage = new DetectLanguage({
-	key: process.env.LANGUAGE_DETECTION_API_KEY
-});
-require("dotenv").config();
 
 module.exports = NodeHelper.create({
 	socketNotificationReceived: async function(noti, payload) {
 		if (noti === "START") {
-			const poem = await getPoem();
+			const poem = await getPoem(payload);
 			this.sendSocketNotification("UPDATE", poem);
 		}
 	}
 });
 
-async function getPoem() {
+async function getPoem(config) {
 	let poem;
 	while (!poem) {
 		try {
@@ -24,8 +19,8 @@ async function getPoem() {
 				"https://www.poemist.com/api/v1/randompoems"
 			);
 			poems = poems.filter(poem => poem.content);
-			poems = await filterByLanguage(poems);
-			poems = filterBySize(poems);
+			poems = await filterByLanguage(poems, config);
+			poems = filterBySize(poems, config);
 			if (poems) {
 				// pick a random poem from the poems that are within language and size configs
 				poem = poems[Math.floor(Math.random() * poems.length)];
@@ -42,11 +37,13 @@ async function getPoem() {
 }
 
 // for a full list of supported languages see https://ws.detectlanguage.com/0.2/languages
-async function filterByLanguage(poems) {
+async function filterByLanguage(poems, config) {
 	if (
-		process.env.ENABLE_LANGUAGE_DETECTION &&
-    process.env.LANGUAGE_DETECTION_API_KEY
+		config.detectLanguageApiKey
 	) {
+		var detectLanguage = new DetectLanguage({
+			key: config.detectLanguageApiKey
+		});
 		const poemsContent = poems.map(poem => poem.content);
 		const languages = await new Promise((resolve, reject) => {
 			detectLanguage.detect(poemsContent, (err, result) => {
@@ -67,7 +64,7 @@ async function filterByLanguage(poems) {
 	}
 }
 
-function filterBySize(poems) {
+function filterBySize(poems, config) {
 	return poems.filter(poem => {
 		const numberOfLines = poem.content.split("\n").length - 1;
 		return (

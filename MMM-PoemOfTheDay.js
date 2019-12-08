@@ -3,7 +3,12 @@ Module.register("MMM-PoemOfTheDay",{
 	defaults: {
 		title: "Loading ...",
 		content: "",
-		name: ""
+		name: "",
+		textLimit: 1000,
+		lineLimit: 10,
+		detectLanguageApiKey: undefined,
+		// for a full list of supported languages see https://ws.detectlanguage.com/0.2/languages
+		languageSet: ["en"]
 	},
 
 	socketNotificationReceived: function(noti, payload) {
@@ -18,7 +23,7 @@ Module.register("MMM-PoemOfTheDay",{
 
 	notificationReceived: function(noti, payload){
 		if(noti === "DOM_OBJECTS_CREATED") {
-			this.sendSocketNotification("START");
+			this.sendSocketNotification("START", this.config);
 		}
 	},
 
