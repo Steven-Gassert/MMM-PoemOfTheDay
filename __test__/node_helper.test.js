@@ -1,9 +1,18 @@
 var { getPoem, filterByLanguage } = require("../node_helper");
 var axios = require("axios");
 var sinon = require("sinon");
-require("dotenv").config();
-jest.mock("../config");
 jest.mock("detectlanguage");
+
+var CONFIG =  {
+	title: "Loading ...",
+	content: "",
+	name: "",
+	textLimit: 20,
+	lineLimit: 1,
+	detectLanguageApiKey: "fake api key",
+	// for a full list of supported languages see https://ws.detectlanguage.com/0.2/languages
+	languageSet: ["en", "es"]
+};
 
 describe("getPoem", () => {
 	let axiosStub = sinon.stub();
@@ -13,7 +22,7 @@ describe("getPoem", () => {
 
 	test("should call poemist api", (done) => {
 		axiosStub = sinon.stub(axios, "get").returns(Promise.resolve({ data: [{ content: "mock content"}]}));
-		getPoem()
+		getPoem(CONFIG)
 			.then((poem) => {
 				expect(axiosStub.calledWith("https://www.poemist.com/api/v1/randompoems")).toBe(true);
 			})
@@ -24,7 +33,7 @@ describe("getPoem", () => {
 		test("should catch the error and try to call the api again", (done) => {
 			axiosStub = sinon.stub(axios, "get").onFirstCall().returns(Promise.reject("Im an error"));
 			axiosStub.onSecondCall().returns(Promise.resolve({ data: [{ content: "mock content"}]}));
-			getPoem()
+			getPoem(CONFIG)
 				.then((poem) => {
 					expect(axiosStub.callCount).toBe(2);
 				})
@@ -36,7 +45,7 @@ describe("getPoem", () => {
 		test("calls the poemist api a second time", (done) => {
 			axiosStub = sinon.stub(axios, "get").onFirstCall().returns(Promise.resolve({ data: [{ content: "line 1 \n line 2 \n"}]}));
 			axiosStub.onSecondCall().returns(Promise.resolve({ data: [{ content: "mock content"}]}));
-			getPoem()
+			getPoem(CONFIG)
 				.then((poem) => {
 					expect(axiosStub.callCount).toBe(2);
 				})
@@ -47,7 +56,7 @@ describe("getPoem", () => {
 	describe("when poemist api returns poems that are below config lineLimit", () => {
 		test("returns a poem", (done) => {
 			axiosStub = sinon.stub(axios, "get").onFirstCall().returns(Promise.resolve({ data: [{ content: "line 1 \n line 2"}]}));
-			getPoem()
+			getPoem(CONFIG)
 				.then((poem) => {
 					expect(poem).toEqual({content: "line 1 \n line 2"});
 				})
@@ -59,7 +68,7 @@ describe("getPoem", () => {
 		test("calls the poemist api a second time", (done) => {
 			axiosStub = sinon.stub(axios, "get").onFirstCall().returns(Promise.resolve({ data: [{ content: "this text is above 20 characters"}]}));
 			axiosStub.onSecondCall().returns(Promise.resolve({ data: [{ content: "mock content"}]}));
-			getPoem()
+			getPoem(CONFIG)
 				.then((poem) => {
 					expect(axiosStub.callCount).toBe(2);
 				})
@@ -70,7 +79,7 @@ describe("getPoem", () => {
 	describe("when poemist api returns poems that are below config textLimit", () => {
 		test("returns a poem", (done) => {
 			axiosStub = sinon.stub(axios, "get").onFirstCall().returns(Promise.resolve({ data: [{ content: "below 20 chars"}]}));
-			getPoem()
+			getPoem(CONFIG)
 				.then((poem) => {
 					expect(poem).toEqual({content: "below 20 chars"});
 				})
@@ -81,7 +90,7 @@ describe("getPoem", () => {
 	describe("when poemist api returns poems that are not within config languageSet", () => {
 		test("should return only the poems within the config languageSet", () => {
 			let poems = [{ content: "will be detected as english" }, { content: "will be detected as spanish" }, { content: "will be detected as french" }];
-			return filterByLanguage(poems).then((poems) => {
+			return filterByLanguage(poems, CONFIG).then((poems) => {
 				expect(poems).toEqual([{ content: "will be detected as english" }, { content: "will be detected as spanish" }]);
 			});
 		});
