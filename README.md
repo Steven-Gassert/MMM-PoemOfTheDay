@@ -1,4 +1,5 @@
 # MMM-PoemOfTheDay
+
 Magic Mirror Module for displaying a poem of the day using [poemist API](https://www.poemist.com/). Optionally utilize [detect language API](https://detectlanguage.com/) to filter poems by language
 
 # Screenshot
@@ -38,4 +39,4 @@ modules: [
 | lineLimit     | the max number of lines allowed in a poem (determined by number of new lines /n) | 10 |
 | detectLanguageApiKey | api key used to make detect language calls, see `Get API key` at https://detectlanguage.com/ | `undefined` |
 | languageSet     | an array of language options that the poem should be written in, for a complete list of language options see https://ws.detectlanguage.com/0.2/languages | `["en", "es"]` |
-
+| updateInterval | interval at which the poems will update in milliseconds, minmum 60000 | 300000 |

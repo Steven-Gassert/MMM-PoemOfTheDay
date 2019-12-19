@@ -1,12 +1,19 @@
 const NodeHelper = require("node_helper");
 const axios = require("axios");
-var DetectLanguage = require("detectlanguage");
+const DetectLanguage = require("detectlanguage");
 
 module.exports = NodeHelper.create({
 	socketNotificationReceived: async function(noti, payload) {
 		if (noti === "START") {
-			const poem = await getPoem(payload);
-			this.sendSocketNotification("UPDATE", poem);
+			if (payload.updateInterval > 60000) {
+				payload.updateInterval = 60000;
+			}
+			const self = this;
+			(async function displayPoem () {
+				const poem = await getPoem(payload);
+				self.sendSocketNotification("UPDATE", poem);
+				setTimeout(displayPoem, self.updateInterval);
+			})();
 		}
 	}
 });
@@ -26,11 +33,11 @@ async function getPoem(config) {
 				poem = poems[Math.floor(Math.random() * poems.length)];
 			}
 		} catch (e) {
+			console.log(e);
 			console.log(
-				"there was most likely an error fetching poems from https://www.poemist.com/api/v1/randompoems, waiting 3 seconds before trying again"
+				"there was most likely an error fetching poems from https://www.poemist.com/api/v1/randompoems, waiting 5 mins before trying again"
 			);
-			console.log("error = ", e);
-			await setTimeout(3000, () => {});
+			await new Promise((resolve) => { setTimeout(resolve, 3000); });
 		}
 	}
 	return poem;
@@ -41,25 +48,33 @@ async function filterByLanguage(poems, config) {
 	if (
 		config.detectLanguageApiKey
 	) {
-		var detectLanguage = new DetectLanguage({
-			key: config.detectLanguageApiKey
-		});
-		const poemsContent = poems.map(poem => poem.content);
-		const languages = await new Promise((resolve, reject) => {
-			detectLanguage.detect(poemsContent, (err, result) => {
-				resolve(result);
+		try {
+			const detectLanguage = new DetectLanguage({
+				key: config.detectLanguageApiKey
 			});
-		});
-		poems = poems.filter((poem, i) => {
-			if (!languages[i][0].language) {
-				// if the detect languages API stops working for some reason, we don't want to discard all poems
-				return true;
-			} else {
-				return config.languageSet.includes(languages[i][0].language);
-			}
-		});
-		return poems;
+			const poemsContent = poems.map(poem => poem.content);
+			const languages = await new Promise((resolve, reject) => {
+				detectLanguage.detect(poemsContent, (err, result) => {
+					err ? reject(err) : resolve(result);
+				});
+			});
+
+			poems = poems.filter((poem, i) => {
+				if (!languages || !languages[i][0].language) {
+					// if the detect languages API stops working for some reason, we don't want to discard all poems
+					return true;
+				} else {
+					return config.languageSet.includes(languages[i][0].language);
+				}
+			});
+			return poems;
+		} catch (e) {
+			console.log(e);
+			console.log("There was an error filteringByLanguage, returning all poems");
+			return poems;
+		}
 	} else {
+		// return all poems if there is no detectLanguageApiKey
 		return poems;
 	}
 }
