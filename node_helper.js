@@ -5,6 +5,9 @@ const DetectLanguage = require("detectlanguage");
 module.exports = NodeHelper.create({
 	socketNotificationReceived: async function(noti, payload) {
 		if (noti === "START") {
+			if (payload.updateInterval > 60000) {
+				payload.updateInterval = 60000;
+			}
 			const self = this;
 			(async function displayPoem () {
 				const poem = await getPoem(payload);
