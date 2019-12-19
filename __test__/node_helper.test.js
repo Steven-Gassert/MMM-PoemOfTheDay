@@ -1,9 +1,9 @@
-var { getPoem, filterByLanguage } = require("../node_helper");
-var axios = require("axios");
-var sinon = require("sinon");
+const { getPoem, filterByLanguage } = require("../node_helper");
+
+const sinon = require("sinon");
 jest.mock("detectlanguage");
 
-var CONFIG =  {
+const CONFIG =  {
 	title: "Loading ...",
 	content: "",
 	name: "",
@@ -11,7 +11,8 @@ var CONFIG =  {
 	lineLimit: 1,
 	detectLanguageApiKey: "fake api key",
 	// for a full list of supported languages see https://ws.detectlanguage.com/0.2/languages
-	languageSet: ["en", "es"]
+	languageSet: ["en", "es"],
+	updateInterval: 1000
 };
 
 describe("getPoem", () => {
@@ -33,11 +34,26 @@ describe("getPoem", () => {
 		test("should catch the error and try to call the api again", (done) => {
 			axiosStub = sinon.stub(axios, "get").onFirstCall().returns(Promise.reject("Im an error"));
 			axiosStub.onSecondCall().returns(Promise.resolve({ data: [{ content: "mock content"}]}));
+			jest.useFakeTimers(); // mocks setTimeOut
 			getPoem(CONFIG)
 				.then((poem) => {
 					expect(axiosStub.callCount).toBe(2);
 				})
 				.then(done,done);
+		});
+	});
+
+	describe("when poemist api returns an error", () => {
+		test.only("should sleep for 5 mins", (done) => {
+			axiosStub = sinon.stub(axios, "get").onFirstCall().returns(Promise.reject("Im an error"));
+			jest.useFakeTimers(); // mocks setTimeOut
+			getPoem(CONFIG)
+				.then((poem) => {
+					console.log("returned from calling getPoem");
+  				expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 1000);
+				})
+				.then(done,done);
+			jest.advanceTimersByTime(2000);
 		});
 	});
 
