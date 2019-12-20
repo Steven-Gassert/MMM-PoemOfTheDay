@@ -5,8 +5,8 @@ const DetectLanguage = require("detectlanguage");
 module.exports = NodeHelper.create({
 	socketNotificationReceived: async function(noti, payload) {
 		if (noti === "START") {
-			if (payload.updateInterval < 60000) {
-				payload.updateInterval = 60000;
+			if (payload.updateInterval < 120000) {
+				payload.updateInterval = 120000;
 			}
 			const self = this;
 			(async function displayPoem () {
@@ -71,7 +71,6 @@ async function filterByLanguage(poems, config) {
 		} catch (e) {
 			console.log(e);
 			console.log("There was an error filteringByLanguage, returning all poems");
-			console.log("========================== poems", poems);
 			return poems;
 		}
 	} else {
