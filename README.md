@@ -24,7 +24,8 @@ modules: [
       textLimit: 1000,
       lineLimit: 10,
       detectLanguageApiKey: "{API_KEY}",
-      languageSet: ["en", "es"]
+      languageSet: ["en", "es"],
+      updateInterval: 60000
     }
   }
 ]
