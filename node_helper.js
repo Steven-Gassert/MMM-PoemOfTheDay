@@ -5,14 +5,14 @@ const DetectLanguage = require("detectlanguage");
 module.exports = NodeHelper.create({
 	socketNotificationReceived: async function(noti, payload) {
 		if (noti === "START") {
-			if (payload.updateInterval > 60000) {
+			if (payload.updateInterval < 60000) {
 				payload.updateInterval = 60000;
 			}
 			const self = this;
 			(async function displayPoem () {
 				const poem = await getPoem(payload);
 				self.sendSocketNotification("UPDATE", poem);
-				setTimeout(displayPoem, self.updateInterval);
+				setTimeout(displayPoem, payload.updateInterval);
 			})();
 		}
 	}
@@ -37,7 +37,7 @@ async function getPoem(config) {
 			console.log(
 				"there was most likely an error fetching poems from https://www.poemist.com/api/v1/randompoems, waiting 5 mins before trying again"
 			);
-			await new Promise((resolve) => { setTimeout(resolve, 3000); });
+			await new Promise((resolve) => { setTimeout(resolve, config.updateInterval); });
 		}
 	}
 	return poem;
@@ -71,6 +71,7 @@ async function filterByLanguage(poems, config) {
 		} catch (e) {
 			console.log(e);
 			console.log("There was an error filteringByLanguage, returning all poems");
+			console.log("========================== poems", poems);
 			return poems;
 		}
 	} else {

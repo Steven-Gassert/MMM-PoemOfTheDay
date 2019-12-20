@@ -104,3 +104,6 @@ describe("getPoem", () => {
 		});
 	});
 });
+
+// TODO: add a test for when detectLanguage API call fails
+// TODO: add update interval tests
